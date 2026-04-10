@@ -83,14 +83,15 @@
 ### 1) 5-fold Training (main)
 当前仓库入口脚本：
 ```bash
-python scripts/train_kfold.py
+python scripts/train_kfold.py ^
+  --audio_dir "D:/paper/data/processed_audio" ^
+  --metadata "D:/paper/data/features/metadata.json" ^
+  --label_mapping "D:/paper/data/features/label_mapping.json" ^
+  --out_dir "D:/paper/big_paper_results" ^
+  --models "model_b,model_b_cr,model_c_cr" ^
+  --seed 42
 ```
 
-你可以在脚本中配置：
-- `AUDIO_DIR / METADATA / LABEL_MAPPING / OUTPUT_ROOT`
-- `models_to_run`（选择要跑的模型变体）
-
-输出：每个模型一个目录，包含配置与汇总（json/日志）。
 
 
 ### 2) Quick Compare (for fast screening)
