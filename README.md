@@ -92,10 +92,22 @@ python scripts/train_kfold.py
 
 输出：每个模型一个目录，包含配置与汇总（json/日志）。
 
-### 2) Quick Compare (for fast screening)
-quick 脚本目前在本地维护（将补充到仓库 `scripts/` 中），用于快速对比新增特征（Chroma/PCEN/Spectral Contrast）并输出汇总表。
 
----
+### 2) Quick Compare (for fast screening)
+入口脚本：
+```bash
+python scripts/train_quick_compare_models.py ^
+  --audio_dir "D:/paper/data/processed_audio" ^
+  --metadata "D:/paper/data/features/metadata.json" ^
+  --label_mapping "D:/paper/data/features/label_mapping.json" ^
+  --out_dir "D:/paper/quick_compare_results" ^
+  --seed 42
+```
+
+输出：
+- 每个模型一个目录：`{model}_quick_seed{seed}/`（含 config/history/result/report）
+- 汇总：`quick_all_results.json`（位于 out_dir）
+
 
 ## Model Variants（Ablation）
 - `baseline_mfcc`：MFCC（1ch）
