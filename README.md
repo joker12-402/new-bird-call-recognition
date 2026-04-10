@@ -3,6 +3,14 @@ Python
 PyTorch
 License
 
+## TL;DR（30秒了解我做了什么）
+- 任务：鸟类声音分类（20类，约1.4万条音频）
+- 方法：多特征融合（MFCC/Mel/Chroma/PCEN/Spectral Contrast）+ 输入端通道重标定（CR）
+- 评测：5-fold（主结论）+ quick 固定划分（快速筛选）
+- 结果（quick, seed=42）：最佳 Acc=0.9424；PCEN+CR Acc=0.9410；Spectral+CR Acc=0.9385
+- 可复现：保存 config/history/result/report（json/txt）
+
+
 本项目探索了多域声学特征融合（MFCC倒谱、Mel频域能量、RMSE时域能量）以及**通道注意力机制（Channel Attention/CR）**在轻量级卷积神经网络（CNN）上的鸟类声音分类表现。
 
 通过严谨的消融实验，本项目揭示了不同声学特征之间的互补性与冗余性，并证明了通道注意力机制在多域特征融合中“抑制噪声、提取有效互补信息”的关键作用。
