@@ -10,6 +10,12 @@ License
 - 结果（quick, seed=42）：最佳 Acc=0.9424；PCEN+CR Acc=0.9410；Spectral+CR Acc=0.9385
 - 可复现：保存 config/history/result/report（json/txt）
 
+## Quick Run
+```bash
+python scripts/train_quick_compare_models.py
+```
+输出：result.json / history.json / report.json（位于输出目录）
+
 
 本项目探索了多域声学特征融合（MFCC倒谱、Mel频域能量、RMSE时域能量）以及**通道注意力机制（Channel Attention/CR）**在轻量级卷积神经网络（CNN）上的鸟类声音分类表现。
 
