@@ -8,10 +8,10 @@
 
 ## TL;DR（30秒了解我做了什么）
 - **任务**：鸟类声音分类（20类，约 14k 条音频切片）
-- **特征**：MFCC、Mel（能量谱）、Chroma、PCEN、Spectral Contrast
+- **特征**：MFCC、Mel（能量谱）、Chroma、PCEN、Spectral Contrast、Temporal energy（RMS）
 - **模型**：轻量 CNN（ImprovedBirdNet）+ 输入端通道重标定 **CR（Channel Reweighting）**
 - **评测**：Stratified **5-fold（主结论）** + quick 固定划分 **7/1/2（快速筛选）**
-- **结论**：CR 在多特征融合下带来稳定收益；时域特征（RMSE）收益有限
+- **结论**：CR 在多特征融合下带来稳定收益；简单时域能量（RMS）收益有限
 
 ---
 
@@ -22,11 +22,11 @@
 - **baseline_mfcc**：Acc **0.9244 ± 0.0035**
 - **model_b（MFCC+Mel）**：Acc **0.9314 ± 0.0057**
 - **model_b_cr（MFCC+Mel + CR）**：Acc **0.9396 ± 0.0031**
-- **model_c_cr（MFCC+RMSE+Mel + CR）**：Acc **0.9387 ± 0.0049**
+- **model_c_cr（MFCC+Temporal(RMS)+Mel + CR）**：Acc **0.9387 ± 0.0049**
 
 结论（5-fold）：
 - **CR 稳定提升**：model_b_cr vs model_b，Acc **+0.0082**；F1_macro **+0.0123**
-- **时域特征（RMSE）直接拼接收益有限**：model_a 相比 baseline 略降
+- **简单时域能量（RMS）直接拼接收益有限**：model_a 相比 baseline 略降
 
 ### Quick（fixed split 7/1/2, seed=42）
 > 完整表格见：`results/quick_summary.md`
@@ -42,10 +42,12 @@
   - `baseline.py`：ImprovedBirdNet（无注意力）
   - `attention_net.py`：CR 模块（输入端通道重标定）+ ImprovedBirdNetWithAttention
 - `utils/`
-  - `audio_features.py`：特征提取（MFCC / Mel / RMSE 等）
+  - `audio_features.py`：特征提取（MFCC / Mel / Temporal energy (RMS) 等）
   - `dataset.py`：多种 Dataset（单/双/三通道输入）
+  - `quick_runner.py`：quick 训练/评测核心逻辑（供脚本入口调用）
 - `scripts/`
-  - `train_kfold.py`：5-fold 训练/评测入口（当前仓库版本）
+  - `train_kfold.py`：5-fold 训练/评测入口（命令行参数）
+  - `train_quick_compare_models.py`：quick 固定划分训练/对比入口
 - `results/`
   - `kfold_summary.md`：5-fold 汇总（mean±std）
   - `quick_summary.md`：quick 汇总（Acc/F1w/F1m）
@@ -59,11 +61,29 @@
 - 结果汇总与对比表（results/）
 
 你需要自行准备：
-- `metadata.json`：样本索引与标签（建议字段：`file_path`, `label`）
-- `label_mapping.json`：`label_to_name` 映射
-- `audio_dir/`：音频文件目录（脚本内可配置）
+- `metadata.json`：样本索引与标签（建议字段：`file_path`, `label`），通过 `--metadata` 指定
+- `label_mapping.json`：`label_to_name` 映射，通过 `--label_mapping` 指定
+- `audio_dir/`：音频文件目录，通过 `--audio_dir` 指定
 
 > 建议在 `data/` 中仅放 placeholder 说明文件，不要上传原始音频。
+
+**metadata.json 示例**
+```json
+[
+  {"file_path": "0009/111651_1.wav", "label": 0},
+  {"file_path": "0017/344259_1.wav", "label": 5}
+]
+```
+
+**label_mapping.json 示例**
+```json
+{
+  "label_to_name": {
+    "0": "class_0",
+    "1": "class_1"
+  }
+}
+```
 
 ---
 
@@ -75,7 +95,7 @@
 - `scikit-learn`
 - `tqdm`
 
-（后续我会补充 `requirements.txt`，目前可按上述库安装）
+（建议补充 `requirements.txt` 以便一键复现）
 
 ---
 
@@ -92,7 +112,16 @@ python scripts/train_kfold.py ^
   --seed 42
 ```
 
+可选模型名（`--models`）：
+- `baseline_mfcc`
+- `model_a`（MFCC + Temporal(RMS), 2ch）
+- `model_b`（MFCC + Mel, 2ch）
+- `model_b_cr`（MFCC + Mel + CR, 2ch）
+- `model_c_no_cr`（MFCC + Temporal(RMS) + Mel, 3ch）
+- `model_c_cr`（MFCC + Temporal(RMS) + Mel + CR, 3ch）
+- 或者使用：`--models "all"`
 
+---
 
 ### 2) Quick Compare (for fast screening)
 入口脚本：
@@ -109,19 +138,20 @@ python scripts/train_quick_compare_models.py ^
 - 每个模型一个目录：`{model}_quick_seed{seed}/`（含 config/history/result/report）
 - 汇总：`quick_all_results.json`（位于 out_dir）
 
+---
 
 ## Model Variants（Ablation）
 - `baseline_mfcc`：MFCC（1ch）
-- `model_a`：MFCC + RMSE（2ch）
+- `model_a`：MFCC + Temporal energy（RMS）（2ch）
 - `model_b`：MFCC + Mel（2ch）
 - `model_b_cr`：MFCC + Mel + CR（2ch）
-- `model_c_no_cr`：MFCC + RMSE + Mel（3ch）
-- `model_c_cr`：MFCC + RMSE + Mel + CR（3ch）
+- `model_c_no_cr`：MFCC + Temporal energy（RMS）+ Mel（3ch）
+- `model_c_cr`：MFCC + Temporal energy（RMS）+ Mel + CR（3ch）
 
 ---
 
 ## Notes / TODO
-- [ ] 将 quick 脚本整理进仓库（`scripts/train_quick_compare_models.py`）
+- [x] Quick 脚本已整理进仓库（`scripts/train_quick_compare_models.py` + `utils/quick_runner.py`）
 - [ ] 新增特征（Chroma/PCEN/Spectral Contrast）的 **5-fold** 对比实验
 - [ ] 补充 `requirements.txt` 与更清晰的数据格式示例（metadata/label_mapping）
 
