@@ -4,19 +4,26 @@ scripts/train_kfold.py
 
 5-fold cross validation entry + training logic for bird sound classification.
 
-- Models:
-  - baseline_mfcc
-  - model_a
-  - model_b
-  - model_b_cr
-  - model_c_no_cr
-  - model_c_cr
+Supported models:
+- baseline_mfcc
+- model_a
+- model_b
+- model_b_cr
+- model_c_no_cr
+- model_c_cr
+- model_b_chroma_no_cr
+- model_b_chroma_cr
+- model_b_pcen_no_cr
+- model_b_pcen_cr
+- model_b_spectral_no_cr
+- model_b_spectral_cr
 
-- Datasets (from utils/dataset.py):
-  - MFCCDataset
-  - MFCCTemporalDataset
-  - MFCCEnergyDataset
-  - ThreeFeatureDataset
+Datasets (from utils/dataset.py):
+- MFCCDataset
+- MFCCTemporalDataset
+- MFCCEnergyDataset
+- ThreeFeatureDataset
+- MultiFeatureDataset
 
 Notes:
 - Uses StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
@@ -29,7 +36,6 @@ import sys
 import json
 import random
 from collections import Counter
-from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
 import numpy as np
@@ -48,7 +54,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.baseline import ImprovedBirdNet
 from models.attention_net import ImprovedBirdNetWithAttention
-from utils.dataset import MFCCDataset, MFCCTemporalDataset, MFCCEnergyDataset, ThreeFeatureDataset
+from utils.dataset import (
+    MFCCDataset,
+    MFCCTemporalDataset,
+    MFCCEnergyDataset,
+    ThreeFeatureDataset,
+    MultiFeatureDataset,
+)
 
 
 # ============================================================
@@ -85,7 +97,7 @@ def dump_json(obj, path: str):
 
 def calculate_class_weights(labels: List[int], num_classes: int) -> torch.Tensor:
     """
-    weights[c] ∝ 1 / count(c), normalized to sum=1 (stable for CrossEntropyLoss)
+    weights[c] ∝ 1 / count(c), normalized to sum=1
     """
     label_counts = Counter(labels)
     total = len(labels)
@@ -237,20 +249,96 @@ def build_model_and_dataset(
         dataset = MFCCTemporalDataset(metadata, audio_dir, indices=indices, is_train=is_train, stats=stats)
 
     elif model_name == "model_b":
+        # MFCC + Mel
         model = ImprovedBirdNet(num_classes=num_classes, in_channels=2)
         dataset = MFCCEnergyDataset(metadata, audio_dir, indices=indices, is_train=is_train, stats=stats)
 
     elif model_name == "model_b_cr":
+        # MFCC + Mel + CR
         model = ImprovedBirdNetWithAttention(num_classes=num_classes, in_channels=2)
         dataset = MFCCEnergyDataset(metadata, audio_dir, indices=indices, is_train=is_train, stats=stats)
 
     elif model_name == "model_c_no_cr":
+        # MFCC + Time + Mel
         model = ImprovedBirdNet(num_classes=num_classes, in_channels=3)
         dataset = ThreeFeatureDataset(metadata, audio_dir, indices=indices, is_train=is_train, stats=stats)
 
     elif model_name == "model_c_cr":
+        # MFCC + Time + Mel + CR
         model = ImprovedBirdNetWithAttention(num_classes=num_classes, in_channels=3)
         dataset = ThreeFeatureDataset(metadata, audio_dir, indices=indices, is_train=is_train, stats=stats)
+
+    elif model_name == "model_b_chroma_no_cr":
+        # MFCC + Mel + Chroma
+        model = ImprovedBirdNet(num_classes=num_classes, in_channels=3)
+        dataset = MultiFeatureDataset(
+            metadata=metadata,
+            audio_dir=audio_dir,
+            feature_names=["mfcc", "energy", "chroma"],
+            indices=indices,
+            is_train=is_train,
+            stats=stats,
+        )
+
+    elif model_name == "model_b_chroma_cr":
+        # MFCC + Mel + Chroma + CR
+        model = ImprovedBirdNetWithAttention(num_classes=num_classes, in_channels=3)
+        dataset = MultiFeatureDataset(
+            metadata=metadata,
+            audio_dir=audio_dir,
+            feature_names=["mfcc", "energy", "chroma"],
+            indices=indices,
+            is_train=is_train,
+            stats=stats,
+        )
+
+    elif model_name == "model_b_pcen_no_cr":
+        # MFCC + Mel + PCEN
+        model = ImprovedBirdNet(num_classes=num_classes, in_channels=3)
+        dataset = MultiFeatureDataset(
+            metadata=metadata,
+            audio_dir=audio_dir,
+            feature_names=["mfcc", "energy", "pcen"],
+            indices=indices,
+            is_train=is_train,
+            stats=stats,
+        )
+
+    elif model_name == "model_b_pcen_cr":
+        # MFCC + Mel + PCEN + CR
+        model = ImprovedBirdNetWithAttention(num_classes=num_classes, in_channels=3)
+        dataset = MultiFeatureDataset(
+            metadata=metadata,
+            audio_dir=audio_dir,
+            feature_names=["mfcc", "energy", "pcen"],
+            indices=indices,
+            is_train=is_train,
+            stats=stats,
+        )
+
+    elif model_name == "model_b_spectral_no_cr":
+        # MFCC + Mel + Spectral Contrast
+        model = ImprovedBirdNet(num_classes=num_classes, in_channels=3)
+        dataset = MultiFeatureDataset(
+            metadata=metadata,
+            audio_dir=audio_dir,
+            feature_names=["mfcc", "energy", "spectral"],
+            indices=indices,
+            is_train=is_train,
+            stats=stats,
+        )
+
+    elif model_name == "model_b_spectral_cr":
+        # MFCC + Mel + Spectral Contrast + CR
+        model = ImprovedBirdNetWithAttention(num_classes=num_classes, in_channels=3)
+        dataset = MultiFeatureDataset(
+            metadata=metadata,
+            audio_dir=audio_dir,
+            feature_names=["mfcc", "energy", "spectral"],
+            indices=indices,
+            is_train=is_train,
+            stats=stats,
+        )
 
     else:
         raise ValueError(f"Unknown model_name: {model_name}")
@@ -310,7 +398,6 @@ def run_kfold(
 
     label_mapping = load_json(label_mapping_path)
     label_to_name = label_mapping.get("label_to_name", {})
-    # label_to_name keys might be "0","1",...
     if isinstance(label_to_name, dict) and len(label_to_name) > 0:
         num_classes = len(label_to_name)
         label_names = [label_to_name[str(i)] for i in range(num_classes)]
@@ -330,7 +417,6 @@ def run_kfold(
     print(f"[INFO] N      = {len(metadata)} | #classes = {len(set(all_labels))}")
     print(f"[INFO] Label distribution = {Counter(all_labels)}")
 
-    # keep compatibility, currently unused (avoid leakage by default)
     stats = None
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
@@ -342,7 +428,6 @@ def run_kfold(
         fold_dir = os.path.join(out_dir, f"fold_{fold}")
         ensure_dir(fold_dir)
 
-        # inner split train/val from train_idx (90/10)
         train_idx = np.array(train_idx)
         perm = np.random.RandomState(seed + fold).permutation(len(train_idx))
         train_idx = train_idx[perm]
@@ -351,7 +436,6 @@ def run_kfold(
         real_train_idx = train_idx[:n_train]
         val_idx = train_idx[n_train:]
 
-        # class weights on training only
         train_labels_for_weight = [all_labels[i] for i in real_train_idx]
         num_classes = len(set(all_labels))
         class_weights = calculate_class_weights(train_labels_for_weight, num_classes=num_classes).to(device)
@@ -436,7 +520,6 @@ def run_kfold(
                 f"f1_w={val_res['f1_weighted']:.4f}, f1_m={val_res['f1_macro']:.4f}"
             )
 
-            # save best by val_f1_weighted
             if val_res["f1_weighted"] > best_val_f1:
                 best_val_f1 = float(val_res["f1_weighted"])
                 early_stop = 0
@@ -458,7 +541,6 @@ def run_kfold(
                     print("[INFO] Early stopping triggered.")
                     break
 
-        # load best and test
         best_model_path = os.path.join(fold_dir, "best_model.pth")
         model.load_state_dict(torch.load(best_model_path, map_location=device))
 
@@ -484,7 +566,6 @@ def run_kfold(
 
         dump_json(fold_results[-1], os.path.join(fold_dir, "fold_result.json"))
 
-    # summarize
     accs = [r["test_acc"] for r in fold_results]
     f1ws = [r["test_f1_weighted"] for r in fold_results]
     f1ms = [r["test_f1_macro"] for r in fold_results]
@@ -541,6 +622,12 @@ def parse_models_arg(s: str) -> List[str]:
             "model_b_cr",
             "model_c_no_cr",
             "model_c_cr",
+            "model_b_chroma_no_cr",
+            "model_b_chroma_cr",
+            "model_b_pcen_no_cr",
+            "model_b_pcen_cr",
+            "model_b_spectral_no_cr",
+            "model_b_spectral_cr",
         ]
 
     return [m.strip() for m in s.split(",") if m.strip()]
