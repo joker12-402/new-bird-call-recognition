@@ -1,5 +1,3 @@
-好的,我已经根据之前的建议,整理了 `README.md` 的完整内容:
-
 ```markdown
 # Multi-Domain Feature Fusion + Channel Reweighting (CR) for Bird Sound Classification
 
