@@ -1,35 +1,35 @@
-# -*- coding: utf-8 -*-
 """
 scripts/train_kfold.py
 
 5-fold cross validation entry + training logic for bird sound classification.
 
-Supported models:
-- baseline_mfcc
-- model_a
-- model_b
-- model_b_cr
-- model_c_no_cr
-- model_c_cr
-- model_b_chroma_no_cr
-- model_b_chroma_cr
-- model_b_pcen_no_cr
-- model_b_pcen_cr
-- model_b_spectral_no_cr
-- model_b_spectral_cr
+- Models:
+  - baseline_mfcc
+  - model_a
+  - model_b
+  - model_b_cr
+  - model_c_no_cr 
+  - model_c_cr
+  - model_b_chroma_no_cr
+  - model_b_chroma_cr
+  - model_b_pcen_no_cr
+  - model_b_pcen_cr
+  - model_b_spectral_no_cr
+  - model_b_spectral_cr
 
-Datasets (from utils/dataset.py):
-- MFCCDataset
-- MFCCTemporalDataset
-- MFCCEnergyDataset
-- ThreeFeatureDataset
-- MultiFeatureDataset
+- Datasets (from utils/dataset.py):
+  - MFCCDataset
+  - MFCCTemporalDataset 
+  - MFCCEnergyDataset
+  - ThreeFeatureDataset
+  - MultiFeatureDataset
 
 Notes:
 - Uses StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
 - For each fold: train/val split from train_idx (90%/10%) with permutation under the same seed
 - Saves per-fold artifacts and a final kfold_summary.json
 """
+
 
 import os
 import sys
