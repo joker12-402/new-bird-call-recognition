@@ -1,3 +1,6 @@
+好的,我已经根据之前的建议,整理了 `README.md` 的完整内容:
+
+```markdown
 # Multi-Domain Feature Fusion + Channel Reweighting (CR) for Bird Sound Classification
 
 > Bird sound classification with a lightweight CNN backbone, multi-feature fusion (MFCC/Mel/Chroma/PCEN/Spectral Contrast) and input-channel reweighting (CR).
@@ -20,19 +23,19 @@
 > 完整表格见：`results/kfold_summary.md`
 
 - **baseline_mfcc**：Acc **0.9244 ± 0.0035**
-- **model_b（MFCC+Mel）**：Acc **0.9314 ± 0.0057**
+- **model_b（MFCC+Mel）**：Acc **0.9314 ± 0.0057** 
 - **model_b_cr（MFCC+Mel + CR）**：Acc **0.9396 ± 0.0031**
 - **model_c_cr（MFCC+Temporal(RMS)+Mel + CR）**：Acc **0.9387 ± 0.0049**
 
 结论（5-fold）：
-- **CR 稳定提升**：model_b_cr vs model_b，Acc **+0.0082**；F1_macro **+0.0123**
+- **CR 稳定提升**：model_b_cr vs model_b，Acc **+0.0082**；F1_macro **+0.0123** 
 - **简单时域能量（RMS）直接拼接收益有限**：model_a 相比 baseline 略降
 
 ### Quick（fixed split 7/1/2, seed=42）
 > 完整表格见：`results/quick_summary.md`
 
 - best quick：**model_b_chroma_cr Acc=0.9424**
-- PCEN + CR：**Acc=0.9410**
+- PCEN + CR：**Acc=0.9410** 
 - Spectral + CR：**Acc=0.9385**
 
 ---
@@ -42,8 +45,8 @@
   - `baseline.py`：ImprovedBirdNet（无注意力）
   - `attention_net.py`：CR 模块（输入端通道重标定）+ ImprovedBirdNetWithAttention
 - `utils/`
-  - `audio_features.py`：特征提取（MFCC / Mel / Temporal energy (RMS) 等）
-  - `dataset.py`：多种 Dataset（单/双/三通道输入）
+  - `audio_features.py`：特征提取（MFCC / Mel / Temporal energy (RMS) / Chroma / PCEN / Spectral Contrast）
+  - `dataset.py`：多种 Dataset（单/双/三通道输入 + MultiFeatureDataset）
   - `quick_runner.py`：quick 训练/评测核心逻辑（供脚本入口调用）
 - `scripts/`
   - `train_kfold.py`：5-fold 训练/评测入口（命令行参数）
@@ -147,15 +150,23 @@ python scripts/train_quick_compare_models.py ^
 - `model_b_cr`：MFCC + Mel + CR（2ch）
 - `model_c_no_cr`：MFCC + Temporal energy（RMS）+ Mel（3ch）
 - `model_c_cr`：MFCC + Temporal energy（RMS）+ Mel + CR（3ch）
+- `model_b_chroma_no_cr`：MFCC + Mel + Chroma（3ch）
+- `model_b_chroma_cr`：MFCC + Mel + Chroma + CR（3ch）
+- `model_b_pcen_no_cr`：MFCC + Mel + PCEN（3ch）
+- `model_b_pcen_cr`：MFCC + Mel + PCEN + CR（3ch）
+- `model_b_spectral_no_cr`：MFCC + Mel + Spectral Contrast（3ch）
+- `model_b_spectral_cr`：MFCC + Mel + Spectral Contrast + CR（3ch）
 
 ---
 
 ## Notes / TODO
 - [x] Quick 脚本已整理进仓库（`scripts/train_quick_compare_models.py` + `utils/quick_runner.py`）
-- [ ] 新增特征（Chroma/PCEN/Spectral Contrast）的 **5-fold** 对比实验
+- [x] 新增特征（Chroma/PCEN/Spectral Contrast）的 **5-fold** 对比实验
 - [ ] 补充 `requirements.txt` 与更清晰的数据格式示例（metadata/label_mapping）
 
 ---
 
 ## Contact
 - GitHub: https://github.com/joker12-402
+```
+
